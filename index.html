@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>Loan Web App</title>
+    <script src="underscore.js"></script>
+    <script src="moment.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script>
+      window.customer = {};
+      customer.accounts = [{
+        accountNumber: 12345,
+        balance: 25000
+      }];
+      customer.loans = [{
+        loanAccountNumber: "123456",
+        principalBalance: 10000,
+        amountDue: 2000,
+        paymentDue: 2000,
+        nextPaymentDate: new Date("2013-11-01")
+      },{
+        loanAccountNumber: "123457",
+        principalBalance: 10000,
+        amountDue: 2000,
+        paymentDue: 2025,
+        nextPaymentDate: new Date("2013-10-20"),
+        additionalInterest: 5,
+        lateFee: 20
+      }];
+      $(function(){
+          var payLoan = function(loanAccountNumber){
+          console.log(loanAccountNumber);
+          var loanObj = _.find(customer.loans, function(l) { 
+            return l.loanAccountNumber==loanAccountNumber
+            });
+          var accountObj = customer.accounts[0];
+          var balance = loanObj.paymentDue;
+          if(loanObj.lateFee) { balance = balance- loanObj.lateFee; loanObj.lateFee=0;}
+          if(loanObj.additionalInterest) { balance = balance- loanObj.additionalInterest; loanObj.additionalInterest=0;}
+          loanObj.principalBalance=loanObj.principalBalance - balance;
+          accountObj.balance = accountObj.balance - loanObj.paymentDue;
+          loanObj.paymentDue = loanObj.amountDue;
+          loanObj.nextPaymentDate = moment(loanObj.nextPaymentDate).add('months',1);
+          refreshLoans();
+          }
+          $("a#nav-accounts").click(function(){
+            var accountsTemplate=$("#accountsTemplate").text();
+            var fn=_.template(accountsTemplate.replace("\n"," "));
+            $("#apphost").html(fn({}));
+            return false;
+            })
+          var refreshLoans = function(){
+            var loansTemplate=$("#loansTemplate").text();
+            var fn=_.template(loansTemplate.replace("\n"," "));
+            $("#apphost").html(fn({}));
+            return false;
+
+          }
+          $("a#nav-loans").click(refreshLoans);
+          $(document).on("click",".pay-loan",function(){
+            $button = $(this);
+            payLoan($button.data("loanNumber"));
+            })
+          })
+    </script>
+    <script type="text/underscore" id="accountsTemplate">
+<h3>Accounts</h3>
+<ul class="accounts">
+<% _.each(customer.accounts, function(account){ %>
+<li><%=account.accountNumber%> has $ <%=account.balance%></li>
+<% }); %></ul>
+    </script>
+    <script type="text/underscore" id="loansTemplate">
+<h3>Loans</h3>
+<div class="loans">
+<% _.each(customer.loans, function(loan){ %>
+<h5>Loan for <%=loan.loanAccountNumber%></h5>
+<button class="pay-loan" data-loan-number="<%=loan.loanAccountNumber%>">Pay Loan</button>
+<table>
+<% for(var k in loan){ %>
+<tr>
+  <td><%=k%></td>
+  <td><%=loan[k]%></td>
+</tr>
+<% } %>
+</table>
+<% }); %>
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <ul>
+        <li><a href="#accounts" id="nav-accounts">Accounts</a></li>
+        <li><a href="#loans" id="nav-loans">Loans</a></li>
+      </ul>
+      <div id="apphost">
+        </div>
+    </div>
+  </body>
+</html>
