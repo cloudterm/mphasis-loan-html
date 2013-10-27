@@ -12,24 +12,25 @@
         accountNumber: 12345,
         balance: 25000
       }];
-      customer.loans = [{
-        loanAccountNumber: "123456",
-        principalBalance: 10000,
-        amountDue: 2000,
-        paymentDue: 2000,
-        nextPaymentDate: new Date("2013-11-01")
-      },{
-        loanAccountNumber: "123457",
-        principalBalance: 10000,
-        amountDue: 2000,
-        paymentDue: 2025,
-        nextPaymentDate: new Date("2013-10-20"),
-        additionalInterest: 5,
-        lateFee: 20
-      }];
+      customer.loans = [];
       $(function(){
+          var addLoan = function(){
+          var $form=$(this);
+          var loanObj={};
+          var elems = $form.serializeArray()
+          for(var kv in elems){
+          loanObj[elems[kv].name]=elems[kv].value;
+          };
+          loanObj.principalBalance = parseInt(loanObj.principalBalance);
+          loanObj.amoutDue= parseInt(loanObj.amountDue);
+          loanObj.lateFee= parseInt(loanObj.lateFee);
+          loanObj.additionalInterest= parseInt(loanObj.additionalInterest);
+          loanObj.paymentDue = loanObj.amountDue + loanObj.additionalInterest + loanObj.lateFee;
+          customer.loans.push(loanObj);
+          refreshLoans();
+          return false;
+          }
           var payLoan = function(loanAccountNumber){
-          console.log(loanAccountNumber);
           var loanObj = _.find(customer.loans, function(l) { 
             return l.loanAccountNumber==loanAccountNumber
             });
@@ -40,15 +41,15 @@
           loanObj.principalBalance=loanObj.principalBalance - balance;
           accountObj.balance = accountObj.balance - loanObj.paymentDue;
           loanObj.paymentDue = loanObj.amountDue;
-          loanObj.nextPaymentDate = moment(loanObj.nextPaymentDate).add('months',1);
+          loanObj.nextPaymentDate = moment(Date.parse(loanObj.nextPaymentDate)).add('months',1).format("DD/MMM/YYYY");
           refreshLoans();
           }
           $("a#nav-accounts").click(function(){
-            var accountsTemplate=$("#accountsTemplate").text();
-            var fn=_.template(accountsTemplate.replace("\n"," "));
-            $("#apphost").html(fn({}));
-            return false;
-            })
+              var accountsTemplate=$("#accountsTemplate").text();
+              var fn=_.template(accountsTemplate.replace("\n"," "));
+              $("#apphost").html(fn({}));
+              return false;
+              })
           var refreshLoans = function(){
             var loansTemplate=$("#loansTemplate").text();
             var fn=_.template(loansTemplate.replace("\n"," "));
@@ -57,11 +58,21 @@
 
           }
           $("a#nav-loans").click(refreshLoans);
+          var showNewLoan = function(){
+            var loansTemplate=$("#newLoanTemplate").text();
+            var fn=_.template(loansTemplate.replace("\n"," "));
+            $("#apphost").html(fn({}));
+            return false;
+
+          }
           $(document).on("click",".pay-loan",function(){
-            $button = $(this);
-            payLoan($button.data("loanNumber"));
-            })
-          })
+              $button = $(this);
+              payLoan($button.data("loanNumber"));
+              })
+          $(document).on("click","button.new-loan",showNewLoan);
+          $(document).on("submit", "form#new-loan-form",addLoan);
+
+      })
     </script>
     <script type="text/underscore" id="accountsTemplate">
 <h3>Accounts</h3>
@@ -71,9 +82,33 @@
                    has $ <span class="account_balance"><%=account.balance%></span></li>
 <% }); %></ul>
     </script>
+<script type="text/underscore" id="newLoanTemplate">
+  <form id="new-loan-form">
+    <label> Loan Account Number
+    <input type="text" name="loanAccountNumber">
+    </label><br/>
+    <label> Principal Balance
+    <input type="numeric" name="principalBalance">
+    </label><br/>
+    <label>Amount Due
+    <input type="numeric" name="amountDue">
+    </label><br/>
+    <label>Next Payment Date
+    <input type="text" name="nextPaymentDate">
+    </label><br/>
+    <label>Additional Interest
+    <input type="numeric" name="additionalInterest" value="0">
+    </label><br/>
+    <label>Late fee
+    <input type="numeric" name="lateFee" value="0">
+    </label><br/>
+    <input type="submit" value="create loan"/>
+  </form>
+</script>
     <script type="text/underscore" id="loansTemplate">
 <h3>Loans</h3>
 <div class="loans">
+<button class="new-loan">New Loan</button>
 <% _.each(customer.loans, function(loan){ %>
 <div class="loan-<%=loan.loanAccountNumber%>">
 <h5>Loan for <%=loan.loanAccountNumber%></h5>
