@@ -67,7 +67,8 @@
 <h3>Accounts</h3>
 <ul class="accounts">
 <% _.each(customer.accounts, function(account){ %>
-<li><%=account.accountNumber%> has $ <%=account.balance%></li>
+<li class="account"><span class="account_number"><%=account.accountNumber%></span> 
+                   has $ <span class="account_balance"><%=account.balance%></span></li>
 <% }); %></ul>
     </script>
     <script type="text/underscore" id="loansTemplate">
