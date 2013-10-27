@@ -75,16 +75,18 @@
 <h3>Loans</h3>
 <div class="loans">
 <% _.each(customer.loans, function(loan){ %>
+<div class="loan-<%=loan.loanAccountNumber%>">
 <h5>Loan for <%=loan.loanAccountNumber%></h5>
 <button class="pay-loan" data-loan-number="<%=loan.loanAccountNumber%>">Pay Loan</button>
 <table>
 <% for(var k in loan){ %>
 <tr>
   <td><%=k%></td>
-  <td><%=loan[k]%></td>
+  <td class="<%=k%>"><%=loan[k]%></td>
 </tr>
 <% } %>
 </table>
+</div>
 <% }); %>
     </script>
   </head>
